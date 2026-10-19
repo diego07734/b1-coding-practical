@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from .terrain import generate_reference_and_limits
 
 class Submarine:
@@ -75,8 +76,13 @@ class Mission:
 
     @classmethod
     def from_csv(cls, file_name: str):
-        # You are required to implement this method
-        pass
+        data = pd.read_csv(file_name)
+        columns = ("reference", "cave_height", "cave_depth")
+        missing_columns = set(columns).difference(data.columns)
+        if missing_columns:
+            raise ValueError(f"Mission CSV is missing required columns: {', '.join(sorted(missing_columns))}")
+
+        return cls(*(data[column].to_numpy(dtype=float) for column in columns))
 
 
 class ClosedLoop:
