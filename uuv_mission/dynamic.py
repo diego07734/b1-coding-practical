@@ -76,13 +76,11 @@ class Mission:
 
     @classmethod
     def from_csv(cls, file_name: str):
-        data = pd.read_csv(file_name)
-        columns = ("reference", "cave_height", "cave_depth")
-        missing_columns = set(columns).difference(data.columns)
-        if missing_columns:
-            raise ValueError(f"Mission CSV is missing required columns: {', '.join(sorted(missing_columns))}")
-
-        return cls(*(data[column].to_numpy(dtype=float) for column in columns))
+        data = np.genfromtxt(file_name, delimiter=',', names=True)
+        reference = data['reference']
+        cave_height = data['cave_height']
+        cave_depth = data['cave_depth']
+        return cls(reference, cave_height, cave_depth)
 
 
 class ClosedLoop:
@@ -104,8 +102,7 @@ class ClosedLoop:
             positions[t] = self.plant.get_position()
             observation_t = self.plant.get_depth()
             # Call your controller here
-            # REFERENCE IS CURRENTLY SET TO 0, YOU MAY WANT TO CHANGE IT TO mission.reference[t]
-            actions[t] = self.controller.compute_control(0, observation_t)
+            actions[t] = self.controller.compute_control(mission.reference[t], observation_t)
             self.plant.transition(actions[t], disturbances[t])
 
         return Trajectory(positions)
